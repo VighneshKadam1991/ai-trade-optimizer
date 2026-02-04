@@ -1,9 +1,0 @@
-variable "environment" { type = string }
-variable "cluster_name" { type = string }
-variable "vpc_id" { type = string }
-variable "subnet_ids" { type = list(string) }
-variable "kafka_version" { type = string }
-variable "instance_type" { type = string }
-variable "number_of_brokers" { type = number }
-variable "ebs_volume_size" { type = number }
-variable "allowed_security_group_ids" { type = list(string) }
