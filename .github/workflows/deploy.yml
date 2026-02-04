@@ -1,4 +1,4 @@
-name: Terraform Deploy (main)
+name: Terraform Deploy
 
 on:
   push:
@@ -11,47 +11,32 @@ permissions:
 
 jobs:
   deploy:
-    name: Deploy Infrastructure
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout repository
-      - name: Checkout code
+      - name: Checkout repo
         uses: actions/checkout@v4
 
-      # Configure AWS credentials via GitHub OIDC (NO static keys)
-      - name: Configure AWS credentials (OIDC)
+      - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: eu-west-2
 
-      # Install Terraform
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: 1.6.6
 
-      # Initialize Terraform (remote S3 + DynamoDB backend)
       - name: Terraform Init
         run: |
           cd infra
-          terraform init -input=false
+          terraform init
 
-      # Validate Terraform configuration
-      - name: Terraform Validate
-        run: |
-          cd infra
-          terraform validate
-
-      # Create execution plan (visible in logs)
       - name: Terraform Plan
         run: |
           cd infra
-          terraform plan -input=false
+          terraform plan
 
-      # Apply infrastructure (main branch only)
       - name: Terraform Apply
         run: |
           cd infra
-          terraform apply -auto-approve -input=false
+          terraform apply -auto-approve
