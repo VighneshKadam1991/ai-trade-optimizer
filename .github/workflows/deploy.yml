@@ -33,7 +33,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::201983195833:role/github-actions-terraform
-          aws-region: eu-west-1
+          aws-region: eu-west-2
 
 
       - name: Verify AWS identity
