@@ -6,6 +6,7 @@ on:
       confirm:
         description: "Type DESTROY to confirm infrastructure deletion"
         required: true
+        type: string
 
 permissions:
   id-token: write
@@ -18,31 +19,34 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout repository
+      # ✅ Checkout repository
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Configure AWS credentials via OIDC
-      - name: Configure AWS credentials (OIDC)
+      # ✅ Authenticate to AWS using OIDC
+      - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: eu-west-2
 
-      # Install Terraform
+      # ✅ Install Terraform
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 1.6.6
 
-      # Initialize Terraform
+      # ✅ Initialize Terraform (connects to S3 backend + DynamoDB lock)
       - name: Terraform Init
-        run: |
-          cd infra
-          terraform init -input=false
+        working-directory: infra
+        run: terraform init -input=false
 
-      # Destroy infrastructure (explicit manual trigger)
+      # ✅ Show destroy plan (audit visibility)
+      - name: Terraform Destroy Plan
+        working-directory: infra
+        run: terraform plan -destroy -input=false
+
+      # 🔥 Destroy infrastructure
       - name: Terraform Destroy
-        run: |
-          cd infra
-          terraform destroy -auto-approve -input=false
+        working-directory: infra
+        run: terraform destroy -auto-approve -input=false
