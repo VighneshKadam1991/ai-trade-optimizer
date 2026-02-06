@@ -11,8 +11,8 @@ public class OrderBook {
     private final NavigableMap<Double,Integer> asks =
             new ConcurrentSkipListMap<>();
 
-    public void update(List<quant.marketdata.model.PriceLevel> bidUpdates,
-                       List<quant.marketdata.model.PriceLevel> askUpdates){
+    public void update(List<quant.models.PriceLevel> bidUpdates,
+                       List<quant.models.PriceLevel> askUpdates){
 
         bidUpdates.forEach(p -> bids.put(p.price(), p.qty()));
         askUpdates.forEach(p -> asks.put(p.price(), p.qty()));

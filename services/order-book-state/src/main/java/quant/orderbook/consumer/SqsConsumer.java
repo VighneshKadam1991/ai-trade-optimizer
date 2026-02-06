@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import quant.orderbook.repo.OrderBookRepo;
-import quant.marketdata.model.OrderBookUpdate;
+import quant.models.OrderBookUpdate;
 
 import software.amazon.awssdk.services.sqs.SqsClient;
 

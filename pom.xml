@@ -1,0 +1,5 @@
+<modules>
+    <module>services/common-models</module>
+    <module>services/market-data-ingestion</module>
+    <module>services/order-book-state</module>
+</modules>
