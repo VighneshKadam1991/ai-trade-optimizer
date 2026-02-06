@@ -38,15 +38,15 @@ jobs:
 
       # ✅ Initialize Terraform (connects to S3 backend + DynamoDB lock)
       - name: Terraform Init
-        working-directory: terraform
+        working-directory: infra
         run: terraform init -input=false
 
       # ✅ Show destroy plan (audit visibility)
       - name: Terraform Destroy Plan
-        working-directory: terraform
+        working-directory: infra
         run: terraform plan -destroy -input=false
 
       # 🔥 Destroy infrastructure
       - name: Terraform Destroy
-        working-directory: terraform
+        working-directory: infra
         run: terraform destroy -auto-approve -input=false
