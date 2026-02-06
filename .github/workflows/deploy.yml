@@ -38,7 +38,7 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
 
       ####################################################
-      # Terraform FIRST (creates ECR repos, ECS infra, etc.)
+      # Terraform FIRST
       ####################################################
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
@@ -56,6 +56,12 @@ jobs:
         run: terraform apply -auto-approve
 
       ####################################################
+      # Build ALL modules from root (IMPORTANT FIX)
+      ####################################################
+      - name: Build all services (multi-module build)
+        run: mvn -B clean install -DskipTests
+
+      ####################################################
       # Login to ECR AFTER infra exists
       ####################################################
       - name: Login to Amazon ECR
@@ -63,12 +69,11 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v2
 
       ####################################################
-      # Build Market Data Service
+      # Build + Push Market Data image
       ####################################################
-      - name: Build Market Data Service
+      - name: Docker Build Market Data
         run: |
           cd services/market-data-ingestion
-          mvn -B package -DskipTests
           docker build -t $ECR_REPO_MARKET .
           docker tag $ECR_REPO_MARKET:latest \
             ${{ steps.login-ecr.outputs.registry }}/$ECR_REPO_MARKET:latest
@@ -76,12 +81,11 @@ jobs:
             ${{ steps.login-ecr.outputs.registry }}/$ECR_REPO_MARKET:latest
 
       ####################################################
-      # Build Order Book Service
+      # Build + Push Order Book image
       ####################################################
-      - name: Build Order Book Service
+      - name: Docker Build Order Book
         run: |
           cd services/order-book-state
-          mvn -B package -DskipTests
           docker build -t $ECR_REPO_ORDERBOOK .
           docker tag $ECR_REPO_ORDERBOOK:latest \
             ${{ steps.login-ecr.outputs.registry }}/$ECR_REPO_ORDERBOOK:latest
