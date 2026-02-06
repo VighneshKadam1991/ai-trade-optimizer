@@ -55,6 +55,12 @@ jobs:
         working-directory: infra
         run: terraform apply -auto-approve
 
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
       ####################################################
       # Build ALL modules from root (IMPORTANT FIX)
       ####################################################
