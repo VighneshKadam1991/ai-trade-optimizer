@@ -22,15 +22,42 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      ####################################################
+      # Checkout
+      ####################################################
       - name: Checkout repo
         uses: actions/checkout@v4
 
+      ####################################################
+      # AWS Login
+      ####################################################
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
+      ####################################################
+      # Terraform FIRST (creates ECR repos, ECS infra, etc.)
+      ####################################################
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init
+        working-directory: infra
+        run: terraform init
+
+      - name: Terraform Plan
+        working-directory: infra
+        run: terraform plan
+
+      - name: Terraform Apply
+        working-directory: infra
+        run: terraform apply -auto-approve
+
+      ####################################################
+      # Login to ECR AFTER infra exists
+      ####################################################
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
@@ -60,27 +87,6 @@ jobs:
             ${{ steps.login-ecr.outputs.registry }}/$ECR_REPO_ORDERBOOK:latest
           docker push \
             ${{ steps.login-ecr.outputs.registry }}/$ECR_REPO_ORDERBOOK:latest
-
-      ####################################################
-      # Terraform
-      ####################################################
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-
-      - name: Terraform Init
-        run: |
-          cd infra
-          terraform init
-
-      - name: Terraform Plan
-        run: |
-          cd infra
-          terraform plan
-
-      - name: Terraform Apply
-        run: |
-          cd infra
-          terraform apply -auto-approve
 
       ####################################################
       # Redeploy ECS Services
