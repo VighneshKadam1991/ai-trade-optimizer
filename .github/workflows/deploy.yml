@@ -13,7 +13,7 @@ env:
   AWS_REGION: eu-west-2
   ECR_REPO_MARKET: market-data-ingestion
   ECR_REPO_ORDERBOOK: order-book-state
-  ECS_CLUSTER: quant-cluster
+  ECS_CLUSTER: quant-execution-cluster
   ECS_SERVICE_MARKET: market-data-service
   ECS_SERVICE_ORDERBOOK: order-book-service
 
