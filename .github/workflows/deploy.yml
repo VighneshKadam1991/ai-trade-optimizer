@@ -9,6 +9,14 @@ permissions:
   id-token: write
   contents: read
 
+env:
+  AWS_REGION: eu-west-2
+  ECR_REPO_MARKET: market-data-ingestion
+  ECR_REPO_ORDERBOOK: order-book-state
+  ECS_CLUSTER: quant-cluster
+  ECS_SERVICE_MARKET: market-data-service
+  ECS_SERVICE_ORDERBOOK: order-book-service
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -21,8 +29,41 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-          aws-region: eu-west-2
+          aws-region: ${{ env.AWS_REGION }}
 
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      ####################################################
+      # Build Market Data Service
+      ####################################################
+      - name: Build Market Data Service
+        run: |
+          cd services/market-data-ingestion
+          mvn -B package -DskipTests
+          docker build -t $ECR_REPO_MARKET .
+          docker tag $ECR_REPO_MARKET:latest \
+            ${{ steps.login-ecr.outputs.registry }}/$ECR_REPO_MARKET:latest
+          docker push \
+            ${{ steps.login-ecr.outputs.registry }}/$ECR_REPO_MARKET:latest
+
+      ####################################################
+      # Build Order Book Service
+      ####################################################
+      - name: Build Order Book Service
+        run: |
+          cd services/order-book-state
+          mvn -B package -DskipTests
+          docker build -t $ECR_REPO_ORDERBOOK .
+          docker tag $ECR_REPO_ORDERBOOK:latest \
+            ${{ steps.login-ecr.outputs.registry }}/$ECR_REPO_ORDERBOOK:latest
+          docker push \
+            ${{ steps.login-ecr.outputs.registry }}/$ECR_REPO_ORDERBOOK:latest
+
+      ####################################################
+      # Terraform
+      ####################################################
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
 
@@ -40,3 +81,18 @@ jobs:
         run: |
           cd infra
           terraform apply -auto-approve
+
+      ####################################################
+      # Redeploy ECS Services
+      ####################################################
+      - name: Force ECS Redeploy
+        run: |
+          aws ecs update-service \
+            --cluster $ECS_CLUSTER \
+            --service $ECS_SERVICE_MARKET \
+            --force-new-deployment
+
+          aws ecs update-service \
+            --cluster $ECS_CLUSTER \
+            --service $ECS_SERVICE_ORDERBOOK \
+            --force-new-deployment

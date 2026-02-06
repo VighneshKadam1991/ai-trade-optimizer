@@ -12,6 +12,11 @@ permissions:
   id-token: write
   contents: read
 
+env:
+  AWS_REGION: eu-west-2
+  ECR_REPO_MARKET: market-data-ingestion
+  ECR_REPO_ORDERBOOK: order-book-state
+
 jobs:
   destroy:
     name: Destroy Infrastructure
@@ -19,34 +24,66 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # ✅ Checkout repository
+      ####################################################
+      # Checkout
+      ####################################################
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # ✅ Authenticate to AWS using OIDC
+      ####################################################
+      # AWS Auth
+      ####################################################
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-          aws-region: eu-west-2
+          aws-region: ${{ env.AWS_REGION }}
 
-      # ✅ Install Terraform
+      ####################################################
+      # Optional: Login to ECR (for cleanup)
+      ####################################################
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      ####################################################
+      # Terraform Setup
+      ####################################################
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 1.6.6
 
-      # ✅ Initialize Terraform (connects to S3 backend + DynamoDB lock)
+      ####################################################
+      # Terraform Init
+      ####################################################
       - name: Terraform Init
         working-directory: infra
         run: terraform init -input=false
 
-      # ✅ Show destroy plan (audit visibility)
+      ####################################################
+      # Destroy Plan (visibility)
+      ####################################################
       - name: Terraform Destroy Plan
         working-directory: infra
         run: terraform plan -destroy -input=false
 
-      # 🔥 Destroy infrastructure
+      ####################################################
+      # Terraform Destroy
+      ####################################################
       - name: Terraform Destroy
         working-directory: infra
         run: terraform destroy -auto-approve -input=false
+
+      ####################################################
+      # Cleanup ECR images (optional but recommended)
+      ####################################################
+      - name: Cleanup ECR Images
+        run: |
+          aws ecr batch-delete-image \
+            --repository-name $ECR_REPO_MARKET \
+            --image-ids imageTag=latest || true
+
+          aws ecr batch-delete-image \
+            --repository-name $ECR_REPO_ORDERBOOK \
+            --image-ids imageTag=latest || true
