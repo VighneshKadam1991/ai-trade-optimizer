@@ -80,7 +80,7 @@ resource "aws_ecs_service" "market_data" {
   launch_type     = "FARGATE"
 
   network_configuration {
-    subnets         = aws_subnet.public[*].id
+    subnets         = [aws_subnet.public.id]
     security_groups = [aws_security_group.ecs.id]
     assign_public_ip = true
   }
@@ -97,7 +97,7 @@ resource "aws_ecs_service" "order_book" {
   launch_type     = "FARGATE"
 
   network_configuration {
-    subnets         = aws_subnet.public[*].id
+    subnets         = [aws_subnet.public.id]
     security_groups = [aws_security_group.ecs.id]
     assign_public_ip = true
   }
