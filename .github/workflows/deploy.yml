@@ -11,11 +11,21 @@ permissions:
 
 env:
   AWS_REGION: eu-west-2
+
   ECR_REPO_MARKET: market-data-ingestion
   ECR_REPO_ORDERBOOK: order-book-state
+  ECR_REPO_ROUTER: order-router
+  ECR_REPO_RISK: risk-engine
+  ECR_REPO_EXECUTION: execution-engine
+  ECR_REPO_TRADESTORE: trade-store
+
   ECS_CLUSTER: quant-execution-cluster
   ECS_SERVICE_MARKET: market-data-service
   ECS_SERVICE_ORDERBOOK: order-book-service
+  ECS_SERVICE_ROUTER: order-router-service
+  ECS_SERVICE_RISK: risk-engine-service
+  ECS_SERVICE_EXECUTION: execution-engine-service
+  ECS_SERVICE_TRADESTORE: trade-store-service
 
 jobs:
   deploy:
@@ -47,14 +57,13 @@ jobs:
         working-directory: infra
         run: terraform init
 
-      - name: Terraform Plan
-        working-directory: infra
-        run: terraform plan
-
       - name: Terraform Apply
         working-directory: infra
         run: terraform apply -auto-approve
 
+      ####################################################
+      # Setup Java
+      ####################################################
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
@@ -62,53 +71,77 @@ jobs:
           java-version: '17'
 
       ####################################################
-      # Build ALL modules from root (IMPORTANT FIX)
+      # Build ALL modules
       ####################################################
-      - name: Build all services (multi-module build)
+      - name: Build all services
         run: mvn -B clean install -DskipTests
 
       ####################################################
-      # Login to ECR AFTER infra exists
+      # Login to ECR
       ####################################################
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
       ####################################################
-      # Build + Push Market Data image
+      # Build + Push images
       ####################################################
-      - name: Docker Build Market Data
+      - name: Build Market Data
         run: |
           cd services/market-data-ingestion
           docker build -t $ECR_REPO_MARKET .
           docker tag $ECR_REPO_MARKET:latest \
             ${{ steps.login-ecr.outputs.registry }}/$ECR_REPO_MARKET:latest
-          docker push \
-            ${{ steps.login-ecr.outputs.registry }}/$ECR_REPO_MARKET:latest
+          docker push ${{ steps.login-ecr.outputs.registry }}/$ECR_REPO_MARKET:latest
 
-      ####################################################
-      # Build + Push Order Book image
-      ####################################################
-      - name: Docker Build Order Book
+      - name: Build Order Book
         run: |
           cd services/order-book-state
           docker build -t $ECR_REPO_ORDERBOOK .
           docker tag $ECR_REPO_ORDERBOOK:latest \
             ${{ steps.login-ecr.outputs.registry }}/$ECR_REPO_ORDERBOOK:latest
-          docker push \
-            ${{ steps.login-ecr.outputs.registry }}/$ECR_REPO_ORDERBOOK:latest
+          docker push ${{ steps.login-ecr.outputs.registry }}/$ECR_REPO_ORDERBOOK:latest
+
+      - name: Build Order Router
+        run: |
+          cd services/order-router
+          docker build -t $ECR_REPO_ROUTER .
+          docker tag $ECR_REPO_ROUTER:latest \
+            ${{ steps.login-ecr.outputs.registry }}/$ECR_REPO_ROUTER:latest
+          docker push ${{ steps.login-ecr.outputs.registry }}/$ECR_REPO_ROUTER:latest
+
+      - name: Build Risk Engine
+        run: |
+          cd services/risk-engine
+          docker build -t $ECR_REPO_RISK .
+          docker tag $ECR_REPO_RISK:latest \
+            ${{ steps.login-ecr.outputs.registry }}/$ECR_REPO_RISK:latest
+          docker push ${{ steps.login-ecr.outputs.registry }}/$ECR_REPO_RISK:latest
+
+      - name: Build Execution Engine
+        run: |
+          cd services/execution-engine
+          docker build -t $ECR_REPO_EXECUTION .
+          docker tag $ECR_REPO_EXECUTION:latest \
+            ${{ steps.login-ecr.outputs.registry }}/$ECR_REPO_EXECUTION:latest
+          docker push ${{ steps.login-ecr.outputs.registry }}/$ECR_REPO_EXECUTION:latest
+
+      - name: Build Trade Store
+        run: |
+          cd services/trade-store
+          docker build -t $ECR_REPO_TRADESTORE .
+          docker tag $ECR_REPO_TRADESTORE:latest \
+            ${{ steps.login-ecr.outputs.registry }}/$ECR_REPO_TRADESTORE:latest
+          docker push ${{ steps.login-ecr.outputs.registry }}/$ECR_REPO_TRADESTORE:latest
 
       ####################################################
-      # Redeploy ECS Services
+      # Redeploy ECS services
       ####################################################
       - name: Force ECS Redeploy
         run: |
-          aws ecs update-service \
-            --cluster $ECS_CLUSTER \
-            --service $ECS_SERVICE_MARKET \
-            --force-new-deployment
-
-          aws ecs update-service \
-            --cluster $ECS_CLUSTER \
-            --service $ECS_SERVICE_ORDERBOOK \
-            --force-new-deployment
+          aws ecs update-service --cluster $ECS_CLUSTER --service $ECS_SERVICE_MARKET --force-new-deployment
+          aws ecs update-service --cluster $ECS_CLUSTER --service $ECS_SERVICE_ORDERBOOK --force-new-deployment
+          aws ecs update-service --cluster $ECS_CLUSTER --service $ECS_SERVICE_ROUTER --force-new-deployment
+          aws ecs update-service --cluster $ECS_CLUSTER --service $ECS_SERVICE_RISK --force-new-deployment
+          aws ecs update-service --cluster $ECS_CLUSTER --service $ECS_SERVICE_EXECUTION --force-new-deployment
+          aws ecs update-service --cluster $ECS_CLUSTER --service $ECS_SERVICE_TRADESTORE --force-new-deployment

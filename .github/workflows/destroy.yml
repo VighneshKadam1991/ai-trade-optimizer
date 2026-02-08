@@ -15,6 +15,14 @@ permissions:
 env:
   AWS_REGION: eu-west-2
 
+  ECR_REPOS: |
+    market-data-ingestion
+    order-book-state
+    order-router
+    risk-engine
+    execution-engine
+    trade-store
+
 jobs:
   destroy:
     name: Destroy Infrastructure
@@ -38,6 +46,26 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
 
       ####################################################
+      # Login to ECR
+      ####################################################
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      ####################################################
+      # Delete all images from ECR repositories (safety)
+      ####################################################
+      - name: Empty ECR repositories
+        run: |
+          for repo in $ECR_REPOS; do
+            images=$(aws ecr list-images --repository-name $repo --query 'imageIds[*]' --output json || echo "[]")
+            if [ "$images" != "[]" ]; then
+              aws ecr batch-delete-image \
+                --repository-name $repo \
+                --image-ids "$images" || true
+            fi
+          done
+
+      ####################################################
       # Setup Terraform
       ####################################################
       - name: Setup Terraform
@@ -51,7 +79,7 @@ jobs:
         run: terraform init -input=false
 
       ####################################################
-      # Destroy Plan (visibility)
+      # Destroy Plan
       ####################################################
       - name: Terraform Destroy Plan
         working-directory: infra
