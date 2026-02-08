@@ -15,7 +15,10 @@
         <module>services/market-data-ingestion</module>
         <module>services/order-book-state</module>
         <module>services/order-router</module>
+        <module>services/risk-engine</module>
         <module>services/execution-engine</module>
+        <module>services/trade-store</module>
+
     </modules>
 
     <properties>
