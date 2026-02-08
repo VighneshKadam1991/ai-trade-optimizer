@@ -78,3 +78,28 @@ resource "aws_iam_role_policy" "risk_engine_policy" {
     ]
   })
 }
+
+########################################################
+# Allow ECS tasks to pull container images from ECR
+########################################################
+resource "aws_iam_role_policy" "ecs_ecr_pull" {
+  name = "ecs-ecr-pull"
+  role = aws_iam_role.ecs_task_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = [
+          "ecr:GetAuthorizationToken",
+          "ecr:BatchCheckLayerAvailability",
+          "ecr:GetDownloadUrlForLayer",
+          "ecr:BatchGetImage"
+        ],
+        Resource = "*"
+      }
+    ]
+  })
+}
+
