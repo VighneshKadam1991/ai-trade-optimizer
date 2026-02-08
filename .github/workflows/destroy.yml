@@ -52,11 +52,12 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v2
 
       ####################################################
-      # Delete all images from ECR repositories (safety)
+      # Empty all ECR repositories
       ####################################################
-      - name: Empty ECR repositories
+      - name: Delete images from ECR repositories
         run: |
           for repo in $ECR_REPOS; do
+            echo "Cleaning repository: $repo"
             images=$(aws ecr list-images --repository-name $repo --query 'imageIds[*]' --output json || echo "[]")
             if [ "$images" != "[]" ]; then
               aws ecr batch-delete-image \
@@ -79,14 +80,14 @@ jobs:
         run: terraform init -input=false
 
       ####################################################
-      # Destroy Plan
+      # Terraform Destroy Plan
       ####################################################
       - name: Terraform Destroy Plan
         working-directory: infra
         run: terraform plan -destroy -input=false
 
       ####################################################
-      # Destroy Infrastructure
+      # Terraform Destroy
       ####################################################
       - name: Terraform Destroy
         working-directory: infra
