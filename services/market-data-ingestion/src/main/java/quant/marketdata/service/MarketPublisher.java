@@ -10,9 +10,9 @@ import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
 
 import java.util.List;
 
-@Slf4j
 @Component
 public class MarketPublisher {
+    private static final Logger log = LoggerFactory.getLogger(MarketPublisher.class);
 
     private final SqsClient sqs = SqsClient.create();
     private final ObjectMapper mapper = new ObjectMapper();
