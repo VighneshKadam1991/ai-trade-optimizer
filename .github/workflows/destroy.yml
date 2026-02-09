@@ -15,14 +15,6 @@ permissions:
 env:
   AWS_REGION: eu-west-2
 
-  ECR_REPOS: |
-    market-data-ingestion
-    order-book-state
-    order-router
-    risk-engine
-    execution-engine
-    trade-store
-
 jobs:
   destroy:
     name: Destroy Infrastructure
@@ -37,34 +29,13 @@ jobs:
         uses: actions/checkout@v4
 
       ####################################################
-      # Configure AWS credentials
+      # Configure AWS credentials (OIDC)
       ####################################################
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
-
-      ####################################################
-      # Login to ECR
-      ####################################################
-      - name: Login to Amazon ECR
-        uses: aws-actions/amazon-ecr-login@v2
-
-      ####################################################
-      # Empty all ECR repositories
-      ####################################################
-      - name: Delete images from ECR repositories
-        run: |
-          for repo in $ECR_REPOS; do
-            echo "Cleaning repository: $repo"
-            images=$(aws ecr list-images --repository-name $repo --query 'imageIds[*]' --output json || echo "[]")
-            if [ "$images" != "[]" ]; then
-              aws ecr batch-delete-image \
-                --repository-name $repo \
-                --image-ids "$images" || true
-            fi
-          done
 
       ####################################################
       # Setup Terraform
@@ -80,14 +51,14 @@ jobs:
         run: terraform init -input=false
 
       ####################################################
-      # Terraform Destroy Plan
+      # Destroy Plan (for visibility)
       ####################################################
       - name: Terraform Destroy Plan
         working-directory: infra
         run: terraform plan -destroy -input=false
 
       ####################################################
-      # Terraform Destroy
+      # Destroy Infrastructure
       ####################################################
       - name: Terraform Destroy
         working-directory: infra
