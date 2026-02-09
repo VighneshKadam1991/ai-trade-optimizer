@@ -10,6 +10,7 @@ import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
 
 import java.util.List;
 
+@Slf4j
 @Component
 public class MarketPublisher {
 
