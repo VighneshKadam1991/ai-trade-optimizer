@@ -19,7 +19,7 @@ public class MarketPublisher {
 
     @Scheduled(fixedRate = 1000)
     public void publish() throws Exception {
-
+        log.info("Publishing market update: {} {}/{}", symbol1, bid1, ask1);
         OrderBookUpdate update = new OrderBookUpdate(
                 "AAPL",
                 List.of(new PriceLevel(150.10, 500)),
@@ -30,5 +30,6 @@ public class MarketPublisher {
                 .queueUrl(queueUrl)
                 .messageBody(mapper.writeValueAsString(update))
                 .build());
+        log.info("Publishing market update: {} {}/{}", symbol2, bid2, ask2);
     }
 }
