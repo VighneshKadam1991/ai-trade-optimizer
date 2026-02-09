@@ -23,17 +23,18 @@ public class MarketPublisher {
 
     @Scheduled(fixedRate = 1000)
     public void publish() throws Exception {
-        log.info("Publishing market update: {} {}/{}", symbol1, bid1, ask1);
+        log.info("Publishing market update: {}", "AAPL");
         OrderBookUpdate update = new OrderBookUpdate(
                 "AAPL",
                 List.of(new PriceLevel(150.10, 500)),
                 List.of(new PriceLevel(150.11, 400)),
                 System.currentTimeMillis());
+        log.info("Publishing market update: {}", "AAPL");
 
         sqs.sendMessage(SendMessageRequest.builder()
                 .queueUrl(queueUrl)
                 .messageBody(mapper.writeValueAsString(update))
                 .build());
-        log.info("Publishing market update: {} {}/{}", symbol2, bid2, ask2);
+
     }
 }
