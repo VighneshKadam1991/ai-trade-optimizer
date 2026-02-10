@@ -57,6 +57,5 @@ public class FillConsumer {
                 System.out.println("Stored trade: " + msg.body());
             });
         }
-        log.info("FillConsumer end");
     }
 }
