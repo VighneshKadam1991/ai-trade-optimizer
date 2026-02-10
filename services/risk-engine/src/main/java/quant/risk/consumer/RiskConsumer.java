@@ -52,6 +52,5 @@ public class RiskConsumer {
                         .build());
             });
         }
-        log.info("RiskConsumer end");
     }
 }
