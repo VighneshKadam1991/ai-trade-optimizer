@@ -28,7 +28,7 @@ public class RiskConsumer {
     }
 
     private void poll(){
-        log.info("RiskConsumer start");
+        log.info("RiskConsumer start1");
         while(true){
 
             ReceiveMessageRequest req = ReceiveMessageRequest.builder()
