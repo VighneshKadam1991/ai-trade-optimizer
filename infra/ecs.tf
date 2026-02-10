@@ -88,6 +88,14 @@ resource "aws_ecs_task_definition" "order_router" {
       name  = "EXECUTION_QUEUE"
       value = aws_sqs_queue.execution_requests.id
     }]
+logConfiguration = {
+      logDriver = "awslogs"
+      options = {
+        awslogs-group         = aws_cloudwatch_log_group.router.name
+        awslogs-region        = "eu-west-2"
+        awslogs-stream-prefix = "ecs"
+      }
+    }
   }])
 }
 
