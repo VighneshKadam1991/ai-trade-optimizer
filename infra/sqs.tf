@@ -17,3 +17,7 @@ resource "aws_sqs_queue" "risk_requests" {
 resource "aws_sqs_queue" "execution_requests_approved" {
   name = "execution-requests-approved"
 }
+
+resource "aws_sqs_queue" "routing_requests" {
+  name = "routing-requests"
+}

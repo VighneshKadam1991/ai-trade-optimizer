@@ -85,6 +85,9 @@ resource "aws_ecs_task_definition" "order_router" {
     essential = true
 
     environment = [{
+                       name  = "ROUTER_QUEUE_URL"
+                       value = aws_sqs_queue.routing_requests.id
+                     },{
       name  = "EXECUTION_QUEUE"
       value = aws_sqs_queue.execution_requests.id
     }]
