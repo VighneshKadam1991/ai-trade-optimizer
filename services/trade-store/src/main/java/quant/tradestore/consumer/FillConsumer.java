@@ -9,12 +9,15 @@ import software.amazon.awssdk.services.dynamodb.model.*;
 
 import java.util.Map;
 import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Component
 public class FillConsumer {
 
     private final SqsClient sqs = SqsClient.create();
     private final DynamoDbClient dynamo = DynamoDbClient.create();
+    private static final Logger log = LoggerFactory.getLogger(FillConsumer.class);
 
     private final String queueUrl = System.getenv("FILL_QUEUE");
     private final String tableName = System.getenv("TRADES_TABLE");
@@ -25,7 +28,7 @@ public class FillConsumer {
     }
 
     private void poll() {
-
+        log.info("FillConsumer start");
         while (true) {
 
             ReceiveMessageRequest req = ReceiveMessageRequest.builder()
@@ -54,5 +57,6 @@ public class FillConsumer {
                 System.out.println("Stored trade: " + msg.body());
             });
         }
+        log.info("FillConsumer end");
     }
 }

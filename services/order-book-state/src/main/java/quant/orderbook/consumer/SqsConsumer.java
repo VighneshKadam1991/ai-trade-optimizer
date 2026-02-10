@@ -7,9 +7,13 @@ import quant.orderbook.repo.OrderBookRepo;
 import quant.models.OrderBookUpdate;
 
 import software.amazon.awssdk.services.sqs.SqsClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Component
 public class SqsConsumer {
+
+    private static final Logger log = LoggerFactory.getLogger(SqsConsumer.class);
 
     private final SqsClient sqs = SqsClient.create();
     private final ObjectMapper mapper = new ObjectMapper();
@@ -23,6 +27,7 @@ public class SqsConsumer {
 
     @Scheduled(fixedDelay = 500)
     public void poll() throws Exception {
+        log.info("SqsConsumer start");
 
         var resp = sqs.receiveMessage(r->r.queueUrl(queueUrl).maxNumberOfMessages(5));
 
@@ -35,5 +40,6 @@ public class SqsConsumer {
             sqs.deleteMessage(d->d.queueUrl(queueUrl)
                     .receiptHandle(m.receiptHandle()));
         }
+        log.info("SqsConsumer end");
     }
 }

@@ -5,9 +5,15 @@ import quant.orderbook.repo.OrderBookRepo;
 
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 @RestController
 @RequestMapping("/book")
 public class BookController {
+
+    private static final Logger log = LoggerFactory.getLogger(BookController.class);
+
 
     private final OrderBookRepo repo;
 

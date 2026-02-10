@@ -4,9 +4,13 @@ import jakarta.annotation.PostConstruct;
 import org.springframework.stereotype.Component;
 import software.amazon.awssdk.services.sqs.SqsClient;
 import software.amazon.awssdk.services.sqs.model.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Component
 public class ExecutionConsumer {
+
+    private static final Logger log = LoggerFactory.getLogger(ExecutionConsumer.class);
 
     private final SqsClient sqs = SqsClient.create();
 
@@ -22,6 +26,7 @@ public class ExecutionConsumer {
     }
 
     public void poll() {
+        log.info("polling execution consumer - exe engine");
 
         while (true) {
 
@@ -48,5 +53,6 @@ public class ExecutionConsumer {
                         .build());
             });
         }
+        log.info("polling execution consumer - exe engine end");
     }
 }

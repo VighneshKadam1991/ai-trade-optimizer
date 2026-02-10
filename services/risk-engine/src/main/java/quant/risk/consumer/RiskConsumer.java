@@ -5,12 +5,15 @@ import org.springframework.stereotype.Component;
 import quant.risk.service.RiskService;
 import software.amazon.awssdk.services.sqs.SqsClient;
 import software.amazon.awssdk.services.sqs.model.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Component
 public class RiskConsumer {
 
     private final RiskService riskService;
     private final SqsClient sqs = SqsClient.create();
+    private static final Logger log = LoggerFactory.getLogger(RiskConsumer.class);
 
     private final String requestQueue = System.getenv("RISK_REQUEST_QUEUE");
     private final String approvedQueue = System.getenv("APPROVED_QUEUE");
@@ -25,7 +28,7 @@ public class RiskConsumer {
     }
 
     private void poll(){
-
+        log.info("RiskConsumer start");
         while(true){
 
             ReceiveMessageRequest req = ReceiveMessageRequest.builder()
@@ -49,5 +52,6 @@ public class RiskConsumer {
                         .build());
             });
         }
+        log.info("RiskConsumer end");
     }
 }
